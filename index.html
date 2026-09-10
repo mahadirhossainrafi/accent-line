@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Accent Line</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0A1F3D">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F7F3EA;
+    --ink:#181818;
+    --ink-soft:#4B4842;
+    --navy:#0A1F3D;
+    --line-r:#E8A33D;
+    --line-schwa:#2C6E7F;
+    --line-th:#C1443C;
+    --line-vw:#4C7A63;
+    --line-rhythm:#6B4C7A;
+    --success:#3E7A54;
+    --card:#FFFFFF;
+    --hair:#DDD6C7;
+    --radius:2px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:28px 20px 80px;}
+
+  /* Header */
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    border-bottom:3px solid var(--navy);
+    padding-bottom:18px;
+    margin-bottom:28px;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  .brand h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:30px;
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+    color:var(--navy);
+  }
+  .brand p{margin:0;color:var(--ink-soft);font-size:14px;max-width:440px;line-height:1.5;}
+  .stats{
+    display:flex;
+    gap:18px;
+    text-align:right;
+  }
+  .stat b{
+    display:block;
+    font-family:'Space Grotesk', sans-serif;
+    font-size:26px;
+    color:var(--navy);
+    line-height:1;
+  }
+  .stat span{font-size:11.5px;color:var(--ink-soft);}
+
+  /* Map */
+  .map{display:flex;flex-direction:column;gap:26px;margin-bottom:20px;}
+  .line-row{background:var(--card);border:1px solid var(--hair);padding:18px 20px;}
+  .line-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+  .line-title{display:flex;align-items:center;gap:10px;}
+  .dot{width:14px;height:14px;border-radius:50%;flex:none;}
+  .line-title h2{font-family:'Space Grotesk',sans-serif;font-size:17px;margin:0;font-weight:600;}
+  .line-desc{font-size:12.5px;color:var(--ink-soft);margin:2px 0 0;}
+  .line-progress-text{font-size:12px;color:var(--ink-soft);white-space:nowrap;}
+
+  .stations-track{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:0;
+    padding:6px 0;
+    overflow-x:auto;
+  }
+  .track-line{position:absolute;left:16px;right:16px;top:50%;height:3px;transform:translateY(-50%);z-index:0;opacity:.35;}
+  .station{
+    position:relative;
+    z-index:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    min-width:92px;
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:6px 4px;
+    font-family:'IBM Plex Sans',sans-serif;
+  }
+  .station-node{
+    width:26px;height:26px;border-radius:50%;
+    border:3px solid var(--ink);
+    background:var(--paper);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .station-node.done{background:var(--ink);}
+  .station-node.done::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--paper);}
+  .station-label{font-size:11.5px;text-align:center;color:var(--ink-soft);line-height:1.3;}
+  .station:hover .station-label{color:var(--ink);}
+
+  /* Panel */
+  .overlay{
+    position:fixed;inset:0;background:rgba(10,17,30,0.55);
+    display:none;align-items:flex-start;justify-content:center;
+    padding:32px 16px;overflow-y:auto;z-index:50;
+  }
+  .overlay.active{display:flex;}
+  .panel{
+    background:var(--card);
+    max-width:600px;width:100%;
+    border-top:6px solid var(--navy);
+    padding:26px 26px 30px;
+    margin-top:20px;
+  }
+  .panel-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
+  .panel-head h3{font-family:'Space Grotesk',sans-serif;font-size:20px;margin:0;}
+  .panel-sub{font-size:12.5px;color:var(--ink-soft);margin:2px 0 18px;}
+  .close-btn{
+    background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--ink-soft);
+    padding:2px 6px;
+  }
+  .close-btn:hover{color:var(--ink);}
+
+  .item{
+    border-bottom:1px solid var(--hair);
+    padding:13px 0;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+  }
+  .item:last-of-type{border-bottom:none;}
+  .item-text{flex:1;}
+  .item-word{font-size:15.5px;font-weight:500;}
+  .item-note{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .play-btn{
+    flex:none;
+    border:1.5px solid var(--navy);
+    background:none;
+    color:var(--navy);
+    width:34px;height:34px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:14px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .play-btn:hover{background:var(--navy);color:#fff;}
+  .play-btn:disabled{opacity:.4;cursor:default;}
+
+  .record-block{
+    margin-top:18px;
+    padding-top:16px;
+    border-top:1px dashed var(--hair);
+  }
+  .record-block p{font-size:12.5px;color:var(--ink-soft);margin:0 0 10px;}
+  .record-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .btn{
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:13px;
+    font-weight:500;
+    border:1.5px solid var(--ink);
+    background:var(--ink);
+    color:var(--paper);
+    padding:9px 16px;
+    cursor:pointer;
+    border-radius:var(--radius);
+  }
+  .btn.ghost{background:none;color:var(--ink);}
+  .btn.recording{background:var(--line-th);border-color:var(--line-th);color:#fff;}
+  .btn:disabled{opacity:.45;cursor:default;}
+  audio{height:34px;max-width:210px;}
+
+  .panel-footer{
+    margin-top:22px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .complete-btn{
+    background:var(--success);
+    border-color:var(--success);
+    color:#fff;
+  }
+  .complete-btn.done{background:var(--ink-soft);border-color:var(--ink-soft);}
+  .mic-note{font-size:11px;color:var(--ink-soft);}
+
+  footer{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin-top:36px;
+  }
+
+  @media (max-width:520px){
+    .stats{gap:12px;}
+    .stat b{font-size:21px;}
+    .panel{padding:20px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <h1>The Accent Line</h1>
+      <p>British pronunciation drills built around the five sounds Bangla speakers usually need to unlearn first.</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="streakNum">0</b><span>day streak</span></div>
+      <div class="stat"><b id="doneNum">0</b><span>stations done</span></div>
+    </div>
+  </header>
+
+  <div class="map" id="map"></div>
+
+  <footer>Progress is saved automatically on this device.</footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="panel" id="panel"></div>
+</div>
+
+<script>
+/* ---------------- content data ---------------- */
+const LINES = [
+  {
+    id:'r', name:'The R Line', color:'var(--line-r)', hex:'#E8A33D',
+    desc:'Non-rhotic R — the single biggest marker of a British accent',
+    stations:[
+      { id:'r1', name:'Drop it', items:[
+        {w:'car', n:'"kah" — no R sound'},
+        {w:'park', n:'"pahk"'},
+        {w:'mother', n:'"muh-thuh"'},
+        {w:'better', n:'"bet-uh"'},
+        {w:'turn', n:'"tuhn"'},
+        {w:'work', n:'"wuhk"'},
+        {w:'first', n:'"fuhst"'},
+        {w:'her', n:'"huh"'},
+        {w:'store', n:'"stoh"'},
+        {w:'teacher', n:'"tee-chuh"'},
+      ]},
+      { id:'r2', name:'Keep it', items:[
+        {w:'very', n:'R before a vowel — keep it'},
+        {w:'around', n:'keep the R'},
+        {w:'sorry', n:'keep the R'},
+        {w:'marry', n:'keep the R'},
+        {w:'arrive', n:'keep the R'},
+        {w:'spirit', n:'keep the R'},
+        {w:'hurry', n:'keep the R'},
+      ]},
+      { id:'r3', name:'Sentences', items:[
+        {w:'The car is parked near the market.', n:'drop R in car, parked, near, market'},
+        {w:'Her father works far from home.', n:'drop R in her, father, far'},
+        {w:'I heard the teacher speak for an hour.', n:'drop R in heard, teacher, hour'},
+        {w:'Turn left after the corner store.', n:'drop R in turn, corner, store'},
+      ]},
+      { id:'r4', name:'Mixed drill', items:[
+        {w:"Peter's mother drove her car to the corner store.", n:'mixed R patterns — read slowly first'},
+        {w:'Her brother arrived very early for work.', n:'drop then keep the R — brother/work vs arrived/very'},
+      ]},
+      { id:'r5', name:'Linking R', items:[
+        {w:'far away', n:'the R reappears when the next word starts with a vowel — "fah-raway"'},
+        {w:'better and better', n:'"bet-uh-ran-bet-uh"'},
+        {w:'for a while', n:'"foh-ruh-while"'},
+      ]},
+    ]
+  },
+  {
+    id:'schwa', name:'The Schwa Line', color:'var(--line-schwa)', hex:'#2C6E7F',
+    desc:'The lazy "uh" that swallows unstressed vowels',
+    stations:[
+      { id:'s1', name:'Word endings', items:[
+        {w:'about', n:'uh-BOWT, not a-BOWT'},
+        {w:'banana', n:'buh-NAH-nuh'},
+        {w:'computer', n:'kuhm-PYOO-tuh'},
+        {w:'teacher', n:'TEE-chuh'},
+        {w:'photograph', n:'FOH-tuh-grahf — middle syllable reduces'},
+        {w:'family', n:'FAM-lee — the middle "i" almost disappears'},
+        {w:'chocolate', n:'CHOK-lit — two syllables, not three'},
+        {w:'interesting', n:'IN-truh-sting — compresses hard'},
+      ]},
+      { id:'s2', name:'Function words', items:[
+        {w:'a, of, to, the', n:'these almost always reduce to "uh" in a sentence'},
+        {w:'I want to go', n:'"to" becomes "tuh"'},
+        {w:'can, than, and', n:'unstressed in a sentence, they shrink to "kuhn", "thuhn", "uhn"'},
+        {w:'for you and me', n:'"for" and "and" both reduce'},
+      ]},
+      { id:'s3', name:'Sentences', items:[
+        {w:'I would like a cup of tea, please.', n:'"a" and "of" both reduce'},
+        {w:'She is going to the market today.', n:'"to the" compresses'},
+        {w:'He asked for a moment of silence.', n:'"for a" and "of" both reduce'},
+        {w:'They are waiting for a bus to arrive.', n:'"for a" and "to" both reduce'},
+      ]},
+      { id:'s4', name:'Fast speed drill', items:[
+        {w:'What are you going to do about it?', n:'read it twice — once slow, once natural speed'},
+        {w:'I could have told you that would happen.', n:'"could have" often becomes "could-uv"'},
+      ]},
+      { id:'s5', name:'Stress vs reduce', items:[
+        {w:'record (noun) vs record (verb)', n:'REC-ord (stress first) vs re-CORD (stress second, first syllable reduces)'},
+        {w:'present (noun) vs present (verb)', n:'PREZ-ent vs pre-ZENT'},
+      ]},
+    ]
+  },
+  {
+    id:'th', name:'The TH Line', color:'var(--line-th)', hex:'#C1443C',
+    desc:'A sound that does not exist in Bangla — tongue between the teeth',
+    stations:[
+      { id:'t1', name:'Voiceless th', items:[
+        {w:'think', n:'not "tink"'},
+        {w:'three', n:'not "tree"'},
+        {w:'thanks', n:'not "tanks"'},
+        {w:'thumb', n:'not "tum"'},
+        {w:'bath', n:'not "bat"'},
+        {w:'month', n:'not "mont"'},
+        {w:'mathematics', n:'not "matematics"'},
+      ]},
+      { id:'t2', name:'Voiced th', items:[
+        {w:'this', n:'not "dis"'},
+        {w:'that', n:'not "dat"'},
+        {w:'mother', n:'not "moder"'},
+        {w:'father', n:'not "fader"'},
+        {w:'brother', n:'not "broder"'},
+        {w:'weather', n:'not "wedder"'},
+        {w:'together', n:'not "togedder"'},
+      ]},
+      { id:'t3', name:'Sentences', items:[
+        {w:'I think this is the third thing they said.', n:'mix of both th sounds'},
+        {w:'Their brother thanked them for that.', n:'mix of both th sounds'},
+        {w:'Thirty-three thieves thought it thorough.', n:'a proper tongue-twister for voiceless th'},
+        {w:'This weather is bothering my mother and father.', n:'mostly voiced th'},
+      ]},
+      { id:'t4', name:'Minimal pairs', items:[
+        {w:'tin / thin', n:'T is tongue behind teeth, TH is tongue between teeth'},
+        {w:'tree / three', n:''},
+        {w:'day / they', n:'D vs voiced TH'},
+        {w:'den / then', n:'D vs voiced TH'},
+      ]},
+    ]
+  },
+  {
+    id:'vw', name:'The V/W Line', color:'var(--line-vw)', hex:'#4C7A63',
+    desc:'V and W often merge in Bangla-influenced English — they should not',
+    stations:[
+      { id:'v1', name:'Minimal pairs', items:[
+        {w:'vine / wine', n:'V = teeth on lip, W = round lips'},
+        {w:'vet / wet', n:''},
+        {w:'vest / west', n:''},
+        {w:'veil / wail', n:''},
+        {w:'verse / worse', n:''},
+        {w:'van / wan', n:''},
+      ]},
+      { id:'v2', name:'B vs V', items:[
+        {w:'berry / very', n:'B = lips fully close, V = air buzzes through'},
+        {w:'boat / vote', n:''},
+        {w:'best / vest', n:''},
+        {w:'ban / van', n:''},
+      ]},
+      { id:'v3', name:'Sentences', items:[
+        {w:'We visited the village near the river.', n:'alternate V and W deliberately'},
+        {w:'Vera wanted a very warm welcome.', n:'V/W drill sentence'},
+        {w:'The waiter served seven vegetables.', n:'mixed V and W'},
+        {w:'Victor was wearing a woollen vest.', n:'mixed V and W'},
+      ]},
+      { id:'v4', name:'Word list drill', items:[
+        {w:'village, village, village', n:'repeat 5 times, teeth touching lip each time'},
+        {w:'window, window, window', n:'repeat 5 times, lips rounding each time'},
+        {w:'travel, travel, travel', n:'V in the middle of a word — do not skip it'},
+      ]},
+    ]
+  },
+  {
+    id:'rhythm', name:'The Rhythm Line', color:'var(--line-rhythm)', hex:'#6B4C7A',
+    desc:'English is stress-timed, not syllable-timed like Bangla',
+    stations:[
+      { id:'y1', name:'Stress the beat', items:[
+        {w:'I WENT to the SHOP to buy some BREAD.', n:'hit capitalised words harder, rush the rest'},
+        {w:'She CAN\'T beLIEVE it HAPpened aGAIN.', n:'stressed syllables in caps'},
+        {w:'We NEED to LEAVE beFORE it GETS dark.', n:'stressed syllables in caps'},
+        {w:'He WORKS from HOME on MOST week-DAYS.', n:'stressed syllables in caps'},
+      ]},
+      { id:'y2', name:'Linking words', items:[
+        {w:'turn it off', n:'flows as "tur-ni-toff", one unit'},
+        {w:'an apple a day', n:'flows as "uh-na-pluh-day"'},
+        {w:'not at all', n:'flows as "no-ta-tall"'},
+        {w:'come on in', n:'flows as "kuh-mo-nin"'},
+      ]},
+      { id:'y3', name:'Full sentence', items:[
+        {w:'What time is it? I have got to get going.', n:'read it fast, let unstressed words shrink'},
+        {w:'I have been meaning to call you all week.', n:'notice how "have been" and "to" shrink'},
+      ]},
+      { id:'y4', name:'Long passage', items:[
+        {w:'It was a cold morning and the streets were quiet. I walked to the corner shop, bought a newspaper, and headed back home before the rain started.', n:'shadow this out loud — match the rise and fall, not just the words'},
+      ]},
+    ]
+  },
+];
+
+/* ---------------- state ---------------- */
+let progress = { completed:[], streak:0, lastDate:null, totalSessions:0 };
+let mediaRecorder=null, audioChunks=[], currentStream=null;
+
+const totalStations = LINES.reduce((n,l)=>n+l.stations.length,0);
+
+/* ---------------- storage ---------------- */
+async function loadProgress(){
+  try{
+    const res = await window.storage.get('accent-line-progress', false);
+    if(res && res.value){
+      progress = JSON.parse(res.value);
+    }
+  }catch(e){ /* no saved progress yet */ }
+  renderStats();
+}
+
+async function saveProgress(){
+  try{
+    await window.storage.set('accent-line-progress', JSON.stringify(progress), false);
+  }catch(e){ console.error('save failed', e); }
+}
+
+function todayStr(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function registerActivity(){
+  const today = todayStr();
+  if(progress.lastDate === today){
+    // already counted today
+  } else {
+    const y = new Date(); y.setDate(y.getDate()-1);
+    const yesterday = y.toISOString().slice(0,10);
+    if(progress.lastDate === yesterday){
+      progress.streak += 1;
+    } else {
+      progress.streak = 1;
+    }
+    progress.lastDate = today;
+    progress.totalSessions = (progress.totalSessions||0)+1;
+  }
+}
+
+/* ---------------- rendering ---------------- */
+function renderStats(){
+  document.getElementById('streakNum').textContent = progress.streak||0;
+  document.getElementById('doneNum').textContent = progress.completed.length + '/' + totalStations;
+}
+
+function renderMap(){
+  const map = document.getElementById('map');
+  map.innerHTML='';
+  LINES.forEach(line=>{
+    const doneCount = line.stations.filter(s=>progress.completed.includes(s.id)).length;
+    const row = document.createElement('div');
+    row.className='line-row';
+    row.innerHTML = `
+      <div class="line-head">
+        <div class="line-title">
+          <span class="dot" style="background:${line.color}"></span>
+          <div>
+            <h2>${line.name}</h2>
+            <p class="line-desc">${line.desc}</p>
+          </div>
+        </div>
+        <div class="line-progress-text">${doneCount}/${line.stations.length} complete</div>
+      </div>
+      <div class="stations-track">
+        <div class="track-line" style="background:${line.color}"></div>
+        ${line.stations.map(s=>{
+          const done = progress.completed.includes(s.id);
+          return `<button class="station" data-line="${line.id}" data-station="${s.id}">
+            <span class="station-node ${done?'done':''}" style="${done?`background:${line.color};border-color:${line.color}`:`border-color:${line.color}`}"></span>
+            <span class="station-label">${s.name}</span>
+          </button>`;
+        }).join('')}
+      </div>
+    `;
+    map.appendChild(row);
+  });
+
+  document.querySelectorAll('.station').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      openPanel(btn.dataset.line, btn.dataset.station);
+    });
+  });
+}
+
+/* ---------------- panel / drill ---------------- */
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const voices = window.speechSynthesis.getVoices();
+  const gb = voices.find(v=>v.lang==='en-GB') || voices.find(v=>v.lang && v.lang.startsWith('en-GB'));
+  if(gb) u.voice = gb;
+  u.lang = 'en-GB';
+  u.rate = 0.85;
+  window.speechSynthesis.speak(u);
+}
+
+function openPanel(lineId, stationId){
+  const line = LINES.find(l=>l.id===lineId);
+  const station = line.stations.find(s=>s.id===stationId);
+  const done = progress.completed.includes(stationId);
+
+  const panel = document.getElementById('panel');
+  panel.style.borderTopColor = line.hex;
+  panel.innerHTML = `
+    <div class="panel-head">
+      <div>
+        <h3>${line.name} · ${station.name}</h3>
+        <p class="panel-sub">Tap the circle to hear a British pronunciation. Read each line aloud before moving on.</p>
+      </div>
+      <button class="close-btn" id="closeBtn">&times;</button>
+    </div>
+    <div id="itemsList">
+      ${station.items.map((it,i)=>`
+        <div class="item">
+          <div class="item-text">
+            <div class="item-word">${it.w}</div>
+            ${it.n?`<div class="item-note">${it.n}</div>`:''}
+          </div>
+          <button class="play-btn" data-text="${it.w.replace(/"/g,'&quot;')}" title="Play">&#9658;</button>
+        </div>
+      `).join('')}
+    </div>
+    <div class="record-block">
+      <p>Record yourself reading all the lines above, then play it back and compare.</p>
+      <div class="record-row">
+        <button class="btn" id="recordBtn">Start recording</button>
+        <span id="recStatus" class="mic-note"></span>
+      </div>
+      <div class="record-row" id="playbackRow" style="margin-top:10px;"></div>
+    </div>
+    <div class="panel-footer">
+      <span class="mic-note">Station ${totalStations>0?'':''}</span>
+      <button class="btn complete-btn ${done?'done':''}" id="completeBtn">${done?'Marked complete ✓':'Mark station complete'}</button>
+    </div>
+  `;
+
+  panel.querySelectorAll('.play-btn').forEach(b=>{
+    b.addEventListener('click', ()=>speak(b.dataset.text));
+  });
+
+  document.getElementById('closeBtn').addEventListener('click', closePanel);
+  document.getElementById('recordBtn').addEventListener('click', toggleRecording);
+  document.getElementById('completeBtn').addEventListener('click', ()=>{
+    if(!progress.completed.includes(stationId)){
+      progress.completed.push(stationId);
+      registerActivity();
+      saveProgress();
+      renderStats();
+      renderMap();
+    }
+    document.getElementById('completeBtn').textContent = 'Marked complete ✓';
+    document.getElementById('completeBtn').classList.add('done');
+  });
+
+  document.getElementById('overlay').classList.add('active');
+}
+
+function closePanel(){
+  document.getElementById('overlay').classList.remove('active');
+  stopStream();
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+document.getElementById('overlay').addEventListener('click', (e)=>{
+  if(e.target.id==='overlay') closePanel();
+});
+
+/* ---------------- recording ---------------- */
+function stopStream(){
+  if(currentStream){
+    currentStream.getTracks().forEach(t=>t.stop());
+    currentStream=null;
+  }
+}
+
+async function toggleRecording(){
+  const btn = document.getElementById('recordBtn');
+  const status = document.getElementById('recStatus');
+
+  if(mediaRecorder && mediaRecorder.state==='recording'){
+    mediaRecorder.stop();
+    btn.textContent='Start recording';
+    btn.classList.remove('recording');
+    status.textContent='Processing…';
+    return;
+  }
+
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    currentStream = stream;
+    audioChunks=[];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e=>audioChunks.push(e.data);
+    mediaRecorder.onstop = ()=>{
+      const blob = new Blob(audioChunks, {type:'audio/webm'});
+      const url = URL.createObjectURL(blob);
+      const row = document.getElementById('playbackRow');
+      row.innerHTML = `<audio controls src="${url}"></audio>`;
+      status.textContent='Recording ready below';
+      stopStream();
+    };
+    mediaRecorder.start();
+    btn.textContent='Stop recording';
+    btn.classList.add('recording');
+    status.textContent='Recording… speak now';
+  }catch(e){
+    status.textContent='Microphone access was not granted.';
+  }
+}
+
+/* ---------------- init ---------------- */
+if('speechSynthesis' in window){
+  window.speechSynthesis.onvoiceschanged = ()=>{};
+}
+loadProgress().then(renderMap);
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
